@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -436,20 +437,36 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   Future<void> _loadModel() async {
     try {
-      // Simulate model loading - using demo mode to avoid errors
-      await Future.delayed(const Duration(seconds: 1));
+      // Load labels from assets
+      final labelData = await rootBundle.loadString('assets/labels.txt');
+      _labels = labelData.split('\n').where((line) => line.trim().isNotEmpty).toList();
+      _outputSize = _labels.length;
+
+      // Load TFLite model
+      final modelPath = 'assets/sagalyze_skin_model.tflite';
+      _interpreter = await Interpreter.fromAsset(modelPath);
+      
+      // Get model input/output details
+      final inputTensors = _interpreter!.getInputTensors();
+      final outputTensors = _interpreter!.getOutputTensors();
+      
+      if (mounted) {
+        _showSnackBar('Model loaded successfully!', Colors.green);
+      }
+    } catch (e) {
+      if (mounted) {
+        _showSnackBar('Error loading model: $e', Colors.red);
+      }
+      // Fallback to demo mode if model loading fails
       _labels = [
-        'Eczema',
-        'Psoriasis',
         'Acne',
-        'Tinea',
+        'Eczema',
+        'Benign_Nevus',
+        'Suspicious_Lesion',
+        'Fungal_Infection',
         'Vitiligo',
-        'Benign Nevus',
       ];
       _outputSize = _labels.length;
-      _showSnackBar('Demo mode activated - Model ready', Colors.green);
-    } catch (e) {
-      _showSnackBar('Demo mode activated', Colors.orange);
     }
   }
 
@@ -804,7 +821,10 @@ This AI-generated analysis is for clinical decision support only. The dermatolog
   }
 
   Future<void> _classifyImage() async {
-    if (_selectedImage == null) return;
+    if (_selectedImage == null || _interpreter == null) {
+      _showSnackBar('Model not loaded or no image selected', Colors.red);
+      return;
+    }
 
     setState(() {
       _isLoading = true;
@@ -812,33 +832,156 @@ This AI-generated analysis is for clinical decision support only. The dermatolog
     });
 
     try {
-      // Simulate classification for demo
-      await Future.delayed(const Duration(seconds: 2));
+      // Read and preprocess image
+      final imageBytes = await _selectedImage!.readAsBytes();
+      final decodedImage = img.decodeImage(imageBytes);
+      
+      if (decodedImage == null) {
+        throw Exception('Failed to decode image');
+      }
 
-      final demoResults = [
-        {'name': 'Eczema (Atopic Dermatitis)', 'conf': 87.4},
-        {'name': 'Contact Dermatitis', 'conf': 82.3},
-        {'name': 'Psoriasis', 'conf': 79.1},
-        {'name': 'Tinea Corporis', 'conf': 76.8},
-        {'name': 'Seborrheic Dermatitis', 'conf': 71.2},
-      ];
+      // Get model input details
+      final inputTensors = _interpreter!.getInputTensors();
+      final outputTensors = _interpreter!.getOutputTensors();
+      
+      if (inputTensors.isEmpty || outputTensors.isEmpty) {
+        throw Exception('Invalid model structure');
+      }
 
-      final selected = demoResults[0];
+      final inputTensor = inputTensors[0];
+      final outputTensor = outputTensors[0];
+
+      // Get input shape (typically [1, height, width, 3])
+      final inputShape = inputTensor.shape;
+      final inputHeight = inputShape[1];
+      final inputWidth = inputShape[2];
+      
+      // Check if model uses quantized input (uint8)
+      final isQuantized = inputTensor.type == TfLiteType.uint8;
+      
+      // Resize image to model input size
+      final resizedImage = img.copyResize(
+        decodedImage,
+        width: inputWidth,
+        height: inputHeight,
+        interpolation: img.Interpolation.linear,
+      );
+
+      // Convert to RGB if needed
+      img.Image rgbImage = resizedImage;
+      if (resizedImage.numChannels != 3) {
+        rgbImage = img.convert(resizedImage, format: img.Format.rgb);
+      }
+
+      // Prepare input buffer based on model type
+      dynamic inputBuffer;
+      if (isQuantized) {
+        // Quantized model: use uint8 [0, 255]
+        final uint8Buffer = Uint8List(1 * inputHeight * inputWidth * 3);
+        int pixelIndex = 0;
+        for (int y = 0; y < inputHeight; y++) {
+          for (int x = 0; x < inputWidth; x++) {
+            final pixel = rgbImage.getPixel(x, y);
+            uint8Buffer[pixelIndex++] = pixel.r;
+            uint8Buffer[pixelIndex++] = pixel.g;
+            uint8Buffer[pixelIndex++] = pixel.b;
+          }
+        }
+        inputBuffer = uint8Buffer;
+      } else {
+        // Float model: normalize to [0, 1]
+        final floatBuffer = Float32List(1 * inputHeight * inputWidth * 3);
+        int pixelIndex = 0;
+        for (int y = 0; y < inputHeight; y++) {
+          for (int x = 0; x < inputWidth; x++) {
+            final pixel = rgbImage.getPixel(x, y);
+            floatBuffer[pixelIndex++] = pixel.r / 255.0;
+            floatBuffer[pixelIndex++] = pixel.g / 255.0;
+            floatBuffer[pixelIndex++] = pixel.b / 255.0;
+          }
+        }
+        inputBuffer = floatBuffer;
+      }
+
+      // Prepare output buffer
+      dynamic outputBuffer;
+      if (outputTensor.type == TfLiteType.uint8) {
+        outputBuffer = Uint8List(_outputSize);
+      } else {
+        outputBuffer = Float32List(_outputSize);
+      }
+      final output = [outputBuffer];
+
+      // Run inference
+      _interpreter!.run(inputBuffer, output);
+
+      // Get predictions and convert to float if needed
+      List<double> predictions;
+      if (outputBuffer is Uint8List) {
+        // Dequantize: (value - zeroPoint) * scale
+        try {
+          final quantParams = outputTensor.quantizationParams;
+          final scale = quantParams['scale'] as double? ?? 1.0;
+          final zeroPoint = quantParams['zero_point'] as int? ?? 0;
+          predictions = outputBuffer.map((v) => (v - zeroPoint) * scale).toList();
+        } catch (e) {
+          // Fallback: treat as normalized uint8 [0, 255] -> [0, 1]
+          predictions = outputBuffer.map((v) => v / 255.0).toList();
+        }
+      } else {
+        predictions = (outputBuffer as Float32List).toList();
+      }
+      
+      // Apply softmax if values don't sum to ~1.0 (logits)
+      final sum = predictions.fold(0.0, (a, b) => a + b);
+      if (sum > 1.1 || sum < 0.9) {
+        // Apply softmax
+        final maxVal = predictions.reduce((a, b) => a > b ? a : b);
+        final expValues = predictions
+            .map((v) => (v - maxVal))
+            .map((v) => v > -20 ? v : -20)
+            .map((v) => math.exp(v))
+            .toList();
+        final expSum = expValues.fold(0.0, (a, b) => a + b);
+        predictions = expValues.map((v) => v / expSum).toList();
+      }
+      
+      // Find top prediction
+      double maxConfidence = 0.0;
+      int maxIndex = 0;
+      for (int i = 0; i < predictions.length; i++) {
+        if (predictions[i] > maxConfidence) {
+          maxConfidence = predictions[i];
+          maxIndex = i;
+        }
+      }
+
+      // Convert confidence to percentage
+      final confidencePercent = maxConfidence * 100.0;
+      
+      // Format result label (replace underscores with spaces and capitalize)
+      String resultLabel = _labels[maxIndex];
+      resultLabel = resultLabel.replaceAll('_', ' ');
+      resultLabel = resultLabel.split(' ').map((word) {
+        if (word.isEmpty) return word;
+        return word[0].toUpperCase() + word.substring(1).toLowerCase();
+      }).join(' ');
 
       if (mounted) {
         setState(() {
-          _result = selected['name'] as String;
-          _confidence = selected['conf'] as double;
+          _result = resultLabel;
+          _confidence = confidencePercent;
           _isLoading = false;
           _showSymptomChecker = true;
         });
         _resultAnimController.forward(from: 0.0);
+        _showSnackBar('Classification complete!', Colors.green);
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
       }
-      _showSnackBar('Classification complete', Colors.green);
+      _showSnackBar('Error during classification: $e', Colors.red);
     }
   }
 
