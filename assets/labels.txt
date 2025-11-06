@@ -1,9 +1,6 @@
-Actinic Keratosis
-Basal Cell Carcinoma
-Dermatofibroma
-Melanoma
-Nevus
-Pigmented Benign Keratosis
-Seborrheic Keratosis
-Squamous Cell Carcinoma
-Vascular Lesion
+Acne
+Eczema
+Benign_Nevus
+Suspicious_Lesion
+Fungal_Infection
+Vitiligo
