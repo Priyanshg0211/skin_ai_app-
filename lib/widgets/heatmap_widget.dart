@@ -132,9 +132,13 @@ class HeatmapWidget extends StatelessWidget {
                   ? constraints.maxWidth 
                   : screenWidth - 64; // 16 padding * 2 + 32 margin
               
+              // Account for border width (1px on each side = 2px total) to prevent overflow
+              final borderWidth = showGrid ? 2.0 : 0.0;
+              final effectiveAvailableWidth = availableWidth - borderWidth;
+              
               // Calculate cell size to fit within available width
               // Use minimum of gridSize or calculated size based on available width
-              final calculatedCellSize = (availableWidth / cols).floorToDouble();
+              final calculatedCellSize = (effectiveAvailableWidth / cols).floorToDouble();
               final cellSize = calculatedCellSize < gridSize.toDouble() 
                   ? calculatedCellSize 
                   : gridSize.toDouble();
@@ -142,14 +146,15 @@ class HeatmapWidget extends StatelessWidget {
               // Ensure minimum cell size for visibility
               final finalCellSize = cellSize < 4.0 ? 4.0 : cellSize;
               
-              final totalWidth = finalCellSize * cols;
+              // Ensure totalWidth doesn't exceed available width (accounting for border)
+              final totalWidth = (finalCellSize * cols).clamp(0.0, effectiveAvailableWidth);
               final totalHeight = finalCellSize * rows;
               
               // Limit maximum height to prevent taking entire screen
               final maxHeight = MediaQuery.of(context).size.height * 0.4;
               final constrainedHeight = totalHeight > maxHeight ? maxHeight : totalHeight;
               final needsVerticalScroll = totalHeight > maxHeight;
-              final needsHorizontalScroll = totalWidth > availableWidth;
+              final needsHorizontalScroll = totalWidth > effectiveAvailableWidth;
               
               Widget gridWidget = SizedBox(
                 width: totalWidth,
@@ -213,7 +218,7 @@ class HeatmapWidget extends StatelessWidget {
               return Container(
                 constraints: BoxConstraints(
                   maxHeight: constrainedHeight,
-                  maxWidth: availableWidth,
+                  maxWidth: effectiveAvailableWidth + borderWidth,
                 ),
                 decoration: BoxDecoration(
                   border: showGrid
