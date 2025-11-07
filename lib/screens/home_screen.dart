@@ -122,6 +122,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
+  void _initializeDemoData() {
+    // Initialize demo patient visits for demonstration purposes
+    _patientVisits = _getDemoVisits();
+  }
+
   // Generate a simple placeholder image for demo purposes
   Uint8List _generatePlaceholderImage(int width, int height, int red, int green, int blue) {
     final image = img.Image(width: width, height: height);
