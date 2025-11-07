@@ -111,6 +111,7 @@ class HeatmapWidget extends StatelessWidget {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           if (title.isNotEmpty) ...[
             Text(
@@ -122,48 +123,110 @@ class HeatmapWidget extends StatelessWidget {
             ),
             const SizedBox(height: 16),
           ],
-          // Heatmap Grid
-          Container(
-            decoration: BoxDecoration(
-              border: showGrid
-                  ? Border.all(color: Colors.grey[300]!, width: 1)
-                  : null,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Column(
-                children: List.generate(rows, (rowIndex) {
-                  return Row(
-                    children: List.generate(cols, (colIndex) {
-                      final intensity = normalizedData[rowIndex][colIndex];
-                      final color = _getColorForIntensity(intensity);
-                      
-                      return GestureDetector(
-                        onTap: onCellTap != null
-                            ? () => onCellTap!(colIndex, rowIndex, intensity)
-                            : null,
-                        child: Container(
-                          width: gridSize.toDouble(),
-                          height: gridSize.toDouble(),
-                          color: color,
-                          child: showGrid
-                              ? Container(
-                                  decoration: BoxDecoration(
-                                    border: Border.all(
-                                      color: Colors.black.withOpacity(0.1),
-                                      width: 0.5,
-                                    ),
-                                  ),
-                                )
+          // Heatmap Grid - Responsive sizing
+          LayoutBuilder(
+            builder: (context, constraints) {
+              // Calculate available width (accounting for padding and borders)
+              final screenWidth = MediaQuery.of(context).size.width;
+              final availableWidth = constraints.maxWidth > 0 
+                  ? constraints.maxWidth 
+                  : screenWidth - 64; // 16 padding * 2 + 32 margin
+              
+              // Calculate cell size to fit within available width
+              // Use minimum of gridSize or calculated size based on available width
+              final calculatedCellSize = (availableWidth / cols).floorToDouble();
+              final cellSize = calculatedCellSize < gridSize.toDouble() 
+                  ? calculatedCellSize 
+                  : gridSize.toDouble();
+              
+              // Ensure minimum cell size for visibility
+              final finalCellSize = cellSize < 4.0 ? 4.0 : cellSize;
+              
+              final totalWidth = finalCellSize * cols;
+              final totalHeight = finalCellSize * rows;
+              
+              // Limit maximum height to prevent taking entire screen
+              final maxHeight = MediaQuery.of(context).size.height * 0.4;
+              final constrainedHeight = totalHeight > maxHeight ? maxHeight : totalHeight;
+              final needsVerticalScroll = totalHeight > maxHeight;
+              final needsHorizontalScroll = totalWidth > availableWidth;
+              
+              Widget gridWidget = SizedBox(
+                width: totalWidth,
+                height: totalHeight,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: List.generate(rows, (rowIndex) {
+                    return Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: List.generate(cols, (colIndex) {
+                        final intensity = normalizedData[rowIndex][colIndex];
+                        final color = _getColorForIntensity(intensity);
+                        
+                        return GestureDetector(
+                          onTap: onCellTap != null
+                              ? () => onCellTap!(colIndex, rowIndex, intensity)
                               : null,
-                        ),
-                      );
-                    }),
-                  );
-                }),
-              ),
-            ),
+                          child: Container(
+                            width: finalCellSize,
+                            height: finalCellSize,
+                            color: color,
+                            child: showGrid
+                                ? Container(
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: Colors.black.withOpacity(0.1),
+                                        width: 0.5,
+                                      ),
+                                    ),
+                                  )
+                                : null,
+                          ),
+                        );
+                      }),
+                    );
+                  }),
+                ),
+              );
+              
+              // Wrap in scroll views if needed
+              if (needsHorizontalScroll && needsVerticalScroll) {
+                gridWidget = SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.vertical,
+                    child: gridWidget,
+                  ),
+                );
+              } else if (needsHorizontalScroll) {
+                gridWidget = SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: gridWidget,
+                );
+              } else if (needsVerticalScroll) {
+                gridWidget = SingleChildScrollView(
+                  scrollDirection: Axis.vertical,
+                  child: gridWidget,
+                );
+              }
+              
+              return Container(
+                constraints: BoxConstraints(
+                  maxHeight: constrainedHeight,
+                  maxWidth: availableWidth,
+                ),
+                decoration: BoxDecoration(
+                  border: showGrid
+                      ? Border.all(color: Colors.grey[300]!, width: 1)
+                      : null,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: gridWidget,
+                ),
+              );
+            },
           ),
           // Legend
           if (showLegend) ...[
