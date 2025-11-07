@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:photo_view/photo_view.dart';
@@ -222,8 +220,8 @@ class PatientVisitDetailScreen extends StatelessWidget {
         // Create a gradient pattern based on metrics
         final centerX = 5.0;
         final centerY = 5.0;
-        final distance = ((i - centerX) * (i - centerX) + (j - centerY) * (j - centerY)).sqrt();
-        final maxDistance = ((centerX * centerX) + (centerY * centerY)).sqrt();
+        final distance = math.sqrt((i - centerX) * (i - centerX) + (j - centerY) * (j - centerY));
+        final maxDistance = math.sqrt(centerX * centerX + centerY * centerY);
         final normalizedDistance = (maxDistance - distance) / maxDistance;
         
         // Combine metrics for intensity

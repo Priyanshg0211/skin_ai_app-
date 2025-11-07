@@ -1386,10 +1386,10 @@ This AI-generated analysis is for clinical decision support only. The dermatolog
               ],
             ),
           ),
-          PopupMenuButton(
+          PopupMenuButton<void>(
             icon: const Icon(Icons.more_vert),
             tooltip: 'More Options',
-            itemBuilder: (context) => [
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<void>>[
               PopupMenuItem(
                 child: Row(
                   children: [
