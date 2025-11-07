@@ -15,12 +15,10 @@ import '../models/image_processing_data.dart';
 import '../utils/image_processor.dart';
 import '../widgets/heatmap_widget.dart';
 import '../widgets/image_crop_widget.dart';
-import '../services/patient_service.dart';
 import '../services/firebase_patient_service.dart';
 import '../services/auth_service.dart';
 import '../models/patient.dart';
 import '../models/app_user.dart';
-import '../models/user_role.dart';
 import 'patient_summary_screen.dart';
 import 'patient_management_screen.dart';
 import 'patient_detail_screen.dart';
@@ -50,7 +48,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   // Progress tracking variables
   List<PatientVisit> _patientVisits = [];
   bool _showProgressTracking = false;
-  int _selectedComparisonIndex = 0;
   bool _showHeatmap = false;
   Patient? _currentPatient;
   final FirebasePatientService _patientService = FirebasePatientService();
@@ -168,8 +165,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       _interpreter = await Interpreter.fromAsset(modelPath);
       
       // Get model input/output details
-      final inputTensors = _interpreter!.getInputTensors();
-      final outputTensors = _interpreter!.getOutputTensors();
+      _interpreter!.getInputTensors();
+      _interpreter!.getOutputTensors();
       
       if (mounted) {
         _showSnackBar('Model loaded successfully!', Colors.green);
@@ -825,7 +822,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     
     // Generate chart data from actual visits
     final chartData = sortedVisits.asMap().entries.map((entry) {
-      final index = entry.key;
       final visit = entry.value;
       final daysSinceFirst = sortedVisits.first.date.difference(visit.date).inDays.abs();
       final weekLabel = daysSinceFirst < 7 
