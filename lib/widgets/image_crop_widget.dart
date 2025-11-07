@@ -9,7 +9,6 @@ class ImageCropWidget {
     try {
       final croppedFile = await ImageCropper().cropImage(
         sourcePath: imageFile.path,
-        aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
         uiSettings: [
           AndroidUiSettings(
             toolbarTitle: 'Crop Image',
