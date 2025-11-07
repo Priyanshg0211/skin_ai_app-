@@ -1089,13 +1089,13 @@ This AI-generated analysis is for clinical decision support only. The dermatolog
       
       // Convert image to RGB if needed
       img.Image rgbImage = decodedImage;
-      if (decodedImage.format != img.Format.rgb) {
-        rgbImage = img.invert(decodedImage, format: img.Format.rgb);
+      if (decodedImage.format != img.Format.rgb24) {
+        rgbImage = img.convert(decodedImage, format: img.Format.rgb24);
       }
       
       // Resize image to model input size with better interpolation
       final resizedImage = img.copyResize(
-        rgbImage,
+        decodedImage,
         width: inputWidth,
         height: inputHeight,
         interpolation: img.Interpolation.cubic,
