@@ -1138,11 +1138,11 @@ This AI-generated analysis is for clinical decision support only. The dermatolog
       // Handle different shape formats: [1, H, W, 3] or [H, W, 3]
       int inputHeight, inputWidth;
       if (inputShape.length == 4) {
-        inputHeight = inputShape[1] as int;
-        inputWidth = inputShape[2] as int;
+        inputHeight = inputShape[1];
+        inputWidth = inputShape[2];
       } else {
-        inputHeight = inputShape[0] as int;
-        inputWidth = inputShape[1] as int;
+        inputHeight = inputShape[0];
+        inputWidth = inputShape[1];
       }
       
       // Check if model uses quantized input (uint8)
