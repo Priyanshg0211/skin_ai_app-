@@ -1104,12 +1104,6 @@ This AI-generated analysis is for clinical decision support only. The dermatolog
       final inputTypeStr = inputTensor.type.toString().toLowerCase();
       final isQuantized = inputTypeStr.contains('uint8') || inputTypeStr.contains('int8');
       
-      // Convert image to RGB if needed
-      img.Image rgbImage = decodedImage;
-      if (decodedImage.format != img.Format.rgb24) {
-        rgbImage = img.convert(decodedImage, format: img.Format.rgb24);
-      }
-      
       // Resize image to model input size with better interpolation
       final resizedImage = img.copyResize(
         decodedImage,
