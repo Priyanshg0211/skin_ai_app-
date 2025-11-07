@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:uuid/uuid.dart';
 import '../models/patient.dart';
-import '../services/patient_service.dart';
 import '../services/firebase_patient_service.dart';
 import 'patient_detail_screen.dart';
 

@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'role_selection_screen.dart';
 import 'home_screen.dart';
 import '../services/auth_service.dart';
-import '../models/app_user.dart';
 import '../models/user_role.dart';
 import 'patient_portal_screen.dart';
 import 'receptionist_dashboard_screen.dart';

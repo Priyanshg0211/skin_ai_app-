@@ -2,7 +2,6 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_cropper/image_cropper.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class ImageCropWidget {
   static Future<File?> cropImage(File imageFile) async {
