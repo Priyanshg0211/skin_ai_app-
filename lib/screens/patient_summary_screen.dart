@@ -182,7 +182,7 @@ class PatientSummaryScreen extends StatelessWidget {
                   border: Border.all(color: Colors.grey[300]!),
                 ),
                 child: Text(
-                  visit.notes!,
+                  visit!.notes!,
                   style: GoogleFonts.inter(fontSize: 14, height: 1.5),
                 ),
               ),
