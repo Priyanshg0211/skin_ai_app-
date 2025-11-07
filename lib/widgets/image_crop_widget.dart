@@ -49,27 +49,45 @@ class ImageCropWidget {
   }
 
   static Future<Uint8List?> cropImageBytes(Uint8List imageBytes) async {
+    File? tempFile;
+    File? croppedFile;
     try {
       // Create temporary file
       final tempDir = Directory.systemTemp;
-      final tempFile = File('${tempDir.path}/temp_crop_${DateTime.now().millisecondsSinceEpoch}.jpg');
+      tempFile = File('${tempDir.path}/temp_crop_${DateTime.now().millisecondsSinceEpoch}.jpg');
       await tempFile.writeAsBytes(imageBytes);
 
-      final croppedFile = await cropImage(tempFile);
+      croppedFile = await cropImage(tempFile);
       
       if (croppedFile != null) {
         final croppedBytes = await croppedFile.readAsBytes();
-        // Clean up temp file
-        await tempFile.delete();
+        // Clean up temp files
+        try {
+          if (tempFile.existsSync()) await tempFile.delete();
+          // Only delete cropped file if it's in temp directory
+          if (croppedFile.path.contains('temp_crop_') && croppedFile.existsSync()) {
+            await croppedFile.delete();
+          }
+        } catch (_) {
+            // Ignore cleanup errors
+          }
         return croppedBytes;
       }
       
-      // Clean up temp file
-      await tempFile.delete();
       return null;
     } catch (e) {
       debugPrint('Error cropping image bytes: $e');
       return null;
+    } finally {
+      // Ensure cleanup
+      try {
+        if (tempFile != null && tempFile.existsSync()) await tempFile.delete();
+        if (croppedFile != null && croppedFile.path.contains('temp_crop_') && croppedFile.existsSync()) {
+          await croppedFile.delete();
+        }
+      } catch (_) {
+        // Ignore cleanup errors
+      }
     }
   }
 }
