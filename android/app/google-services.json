@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "832674956861",
+    "project_id": "sagalyze-2902c",
+    "storage_bucket": "sagalyze-2902c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:832674956861:android:b67c9f557b7dc447184c54",
+        "android_client_info": {
+          "package_name": "com.example.ai_skin_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDn4MDmYZBS25y7U6LnBE2hg5j2a9q84go"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

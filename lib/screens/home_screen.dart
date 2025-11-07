@@ -1457,6 +1457,7 @@ This AI-generated analysis is for clinical decision support only. The dermatolog
                   }
                 },
               ),
+          
             ],
           ),
           Container(
