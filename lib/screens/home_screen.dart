@@ -55,6 +55,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   AppUser? _currentUser;
   int _timelapseIndex = 0;
   bool _isTimelapsePlaying = false;
+  PageController? _timelapsePageController;
 
   final List<String> _commonSymptoms = [
     'Itching',
@@ -89,6 +90,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     _setupAnimations();
     _initializeDemoData();
     _loadCurrentUser();
+    _timelapsePageController = PageController(initialPage: 0);
   }
 
   Future<void> _loadCurrentUser() async {
@@ -523,6 +525,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         _isTimelapsePlaying = false;
                         _timelapseIndex = 0;
                       });
+                      _timelapsePageController?.animateToPage(
+                        0,
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                      );
                     },
                     tooltip: 'Stop',
                   ),
@@ -534,7 +541,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           Container(
             height: 250,
             child: PageView.builder(
-              controller: PageController(initialPage: _timelapseIndex),
+              controller: _timelapsePageController,
               itemCount: sortedVisits.length,
               onPageChanged: (index) {
                 setState(() => _timelapseIndex = index);
@@ -663,9 +670,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   void _playTimelapse() {
     Future.delayed(const Duration(seconds: 2), () {
       if (_isTimelapsePlaying && mounted && _patientVisits.isNotEmpty) {
+        final nextIndex = (_timelapseIndex + 1) % _patientVisits.length;
         setState(() {
-          _timelapseIndex = (_timelapseIndex + 1) % _patientVisits.length;
+          _timelapseIndex = nextIndex;
         });
+        _timelapsePageController?.animateToPage(
+          nextIndex,
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
+        );
         _playTimelapse();
       }
     });
@@ -705,6 +718,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           _currentPatient = updatedPatient;
           _patientVisits = updatedPatient.visits;
         });
+        // Reset timelapse to show the new visit
+        _timelapsePageController?.jumpToPage(_patientVisits.length - 1);
       }
       _showSnackBar('Visit saved to ${_currentPatient!.name}\'s record', Colors.grey[800]!);
     } else {
@@ -789,7 +804,9 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       setState(() {
         _currentPatient = selected;
         _patientVisits = selected.visits;
+        _timelapseIndex = 0;
       });
+      _timelapsePageController?.jumpToPage(0);
       _showSnackBar('Patient selected: ${selected.name}', Colors.grey[800]!);
     }
   }
@@ -1336,6 +1353,7 @@ This AI-generated analysis is for clinical decision support only. The dermatolog
   void dispose() {
     _interpreter?.close();
     _resultAnimController.dispose();
+    _timelapsePageController?.dispose();
     super.dispose();
   }
 
@@ -1564,7 +1582,9 @@ This AI-generated analysis is for clinical decision support only. The dermatolog
                     setState(() {
                       _currentPatient = null;
                       _patientVisits = [];
+                      _timelapseIndex = 0;
                     });
+                    _timelapsePageController?.jumpToPage(0);
                   },
                 ),
               const PopupMenuDivider(),
