@@ -446,18 +446,34 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           ),
         ),
       );
-    } else if (action == 'crop' && _selectedImage != null) {
-      final croppedFile = await ImageCropWidget.cropImage(_selectedImage!);
-      if (croppedFile != null) {
-        final croppedBytes = await croppedFile.readAsBytes();
-        final processedBytes = await processImageInIsolate(
-          ImageProcessingData(croppedBytes),
-        );
-        setState(() {
-          _selectedImage = croppedFile;
-          _processedImageBytes = processedBytes;
-        });
-        _showSnackBar('Image cropped successfully', Colors.green);
+    } else if (action == 'crop') {
+      Uint8List? imageToCrop;
+      
+      // Use selected image file if available, otherwise use processed bytes
+      if (_selectedImage != null) {
+        imageToCrop = await _selectedImage!.readAsBytes();
+      } else if (_processedImageBytes != null) {
+        imageToCrop = _processedImageBytes;
+      }
+      
+      if (imageToCrop != null) {
+        final croppedBytes = await ImageCropWidget.cropImageBytes(imageToCrop);
+        if (croppedBytes != null) {
+          final processedBytes = await processImageInIsolate(
+            ImageProcessingData(croppedBytes),
+          );
+          setState(() {
+            _processedImageBytes = processedBytes;
+            // Update selected image if it exists
+            if (_selectedImage != null) {
+              _selectedImage = File(_selectedImage!.path.replaceAll(RegExp(r'\.(jpg|jpeg|png)$'), '_cropped.jpg'));
+              _selectedImage!.writeAsBytesSync(croppedBytes);
+            }
+          });
+          _showSnackBar('Image cropped successfully', Colors.green);
+        }
+      } else {
+        _showSnackBar('No image available to crop', Colors.orange);
       }
     }
   }
