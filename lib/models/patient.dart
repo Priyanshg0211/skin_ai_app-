@@ -1,4 +1,3 @@
-import 'dart:typed_data';
 import 'patient_visit.dart';
 
 class Patient {
