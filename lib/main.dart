@@ -18,12 +18,26 @@ class MyApp extends StatelessWidget {
       title: 'SAGAlyze - Smart Dermatology Assistant',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF6C63FF),
-          brightness: Brightness.light,
+        colorScheme: const ColorScheme.light(
+          primary: Colors.black,
+          secondary: Colors.black,
+          surface: Colors.white,
+          background: Colors.white,
+          error: Colors.black,
+          onPrimary: Colors.white,
+          onSecondary: Colors.white,
+          onSurface: Colors.black,
+          onBackground: Colors.black,
+          onError: Colors.white,
         ),
         textTheme: GoogleFonts.interTextTheme(),
         useMaterial3: true,
+        scaffoldBackgroundColor: Colors.white,
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.white,
+          foregroundColor: Colors.black,
+                elevation: 0,
+              ),
       ),
       home: const SplashScreen(),
     );

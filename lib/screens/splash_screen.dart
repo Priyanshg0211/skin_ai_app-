@@ -79,74 +79,66 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF6C63FF), Color(0xFF5A52D5), Color(0xFF4A42C5)],
-          ),
-        ),
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(30),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.health_and_safety,
-                    size: 80,
-                    color: Colors.white,
-                  ),
+      backgroundColor: Colors.white,
+      body: FadeTransition(
+        opacity: _fadeAnimation,
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(30),
+                decoration: BoxDecoration(
+                  color: Colors.black,
+                  shape: BoxShape.circle,
                 ),
-                const SizedBox(height: 30),
-                Text(
-                  'SAGAlyze',
-                  textAlign: TextAlign.center,
+                child: const Icon(
+                  Icons.health_and_safety,
+                  size: 80,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 30),
+              Text(
+                'SAGAlyze',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                  fontSize: 42,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                  height: 1.2,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Clinician-Only Smart Dermatology Assistant',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.inter(
+                  fontSize: 16,
+                  color: Colors.grey[700],
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+              const SizedBox(height: 40),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.black,
+                  borderRadius: BorderRadius.circular(25),
+                ),
+                child: Text(
+                  'AI Assists • Dermatologist Decides',
                   style: GoogleFonts.inter(
-                    fontSize: 42,
-                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
                     color: Colors.white,
-                    height: 1.2,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  'Clinician-Only Smart Dermatology Assistant',
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.inter(
-                    fontSize: 16,
-                    color: Colors.white.withOpacity(0.9),
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-                const SizedBox(height: 40),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(25),
-                  ),
-                  child: Text(
-                    'AI Assists • Dermatologist Decides',
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
